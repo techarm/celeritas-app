@@ -21,7 +21,7 @@ services:
     volumes:
       - ./db-data/redis/:/data
 
-  #  start MariaDB, and ensure that data is stored to a mounted volume
+  #  start local development mail server
   mariadb:
     image: 'mariadb:10.6'
     ports:
@@ -35,3 +35,16 @@ services:
 
     volumes:
       - ./db-data/mariadb:/docker-entrypoint-initdb.d
+
+  #  start Postgres, and ensure that data is stored to a mounted volume
+  mailhog:
+    image: 'mailhog/mailhog:latest'
+    ports:
+      - '8025:8025'
+      - '1025:1025'
+    restart: always
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /data
+    volumes:
+      - ./db-data/mailhog/:/data
