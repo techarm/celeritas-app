@@ -1,5 +1,5 @@
 services:
-  #  start Postgres, and ensure that data is stored to a mounted volume
+  # start Postgres, and ensure that data is stored to a mounted volume
   postgres:
     image: 'postgres:13.4'
     ports:
@@ -12,7 +12,7 @@ services:
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
 
-  #  start Redis, and ensure that data is stored to a mounted volume
+  # start Redis, and ensure that data is stored to a mounted volume
   redis:
     image: 'redis:alpine'
     ports:
@@ -21,30 +21,58 @@ services:
     volumes:
       - ./db-data/redis/:/data
 
-  #  start local development mail server
-  mariadb:
-    image: 'mariadb:10.6'
+  # start sftp webdav, and admin interface; ensure that data is stored to a mounted volume
+  sftp:
+    image: 'drakkan/sftpgo:latest'
     ports:
-      - '3306:3306'
+      - '9080:8080'
+      - '2022:2022'
+      - '10080:10080'
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: celeritas
-      MYSQL_USER: mariadb
-      MYSQL_PASSWORD: password
-
+      SFTPGO_WEBDAVD__BINDINGS__0__PORT: 10080
     volumes:
-      - ./db-data/mariadb:/docker-entrypoint-initdb.d
+      - ./db-data/sftp/:/mnt/data/
+      - ./db-data/home/:/var/lib/sftpgo
 
-  #  start Postgres, and ensure that data is stored to a mounted volume
-  mailhog:
-    image: 'mailhog/mailhog:latest'
+  # start minio, and ensure that data is stored to a mounted volume
+  minio:
+    image: 'quay.io/minio/minio'
+    command: server /mnt/data --console-address ":9001"
     ports:
-      - '8025:8025'
-      - '1025:1025'
+      - '9000:9000'
+      - '9001:9001'
     restart: always
     environment:
-      MH_STORAGE: maildir
-      MH_MAILDIR_PATH: /data
+      MINIO_ROOT_USER: root
+      MINIO_ROOT_PASSWORD: password
     volumes:
-      - ./db-data/mailhog/:/data
+      - ./db-data/minio/:/mnt/data/
+
+  # start local development mail server
+  # mariadb:
+  #   image: 'mariadb:10.6'
+  #   ports:
+  #     - '3306:3306'
+  #   restart: always
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: password
+  #     MYSQL_DATABASE: celeritas
+  #     MYSQL_USER: mariadb
+  #     MYSQL_PASSWORD: password
+
+  #   volumes:
+  #     - ./db-data/mariadb:/docker-entrypoint-initdb.d
+
+  # start Postgres, and ensure that data is stored to a mounted volume
+  # mailhog:
+  #   image: 'mailhog/mailhog:latest'
+  #   ports:
+  #     - '8025:8025'
+  #     - '1025:1025'
+  #   restart: always
+  #   environment:
+  #     MH_STORAGE: maildir
+  #     MH_MAILDIR_PATH: /data
+  #   volumes:
+  #     - ./db-data/mailhog/:/data
